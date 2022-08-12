@@ -1,0 +1,22 @@
+WITH need_amount AS(
+         SELECT client_market_id, id, SUM(need_count) AS amount  
+           FROM `molten-enigma-300310.hrm.client_market_shift` AS client_market_shift
+          WHERE ((EXTRACT(MONTH FROM start)=5) AND (EXTRACT(YEAR FROM start)=2022))
+       GROUP BY id, client_market_id
+       ORDER BY client_market_id
+                    ),
+
+   real_employee AS(
+        SELECT client_marker_shift_id, COUNT(employee_id) AS count_employee_shift
+          FROM `molten-enigma-300310.hrm.client_market_shift_employee` AS client_market_shift_employee
+         WHERE status_id = 'came_out'
+      GROUP BY client_marker_shift_id
+      ORDER BY client_marker_shift_id
+                    )
+
+   SELECT client_market_id, SUM(need_amount.amount) AS amount, SUM(real_employee.count_employee_shift) 
+          AS count_employee, ROUND(SUM(real_employee.count_employee_shift)/SUM(need_amount.amount), 3) AS SLA_client_market
+     FROM need_amount
+LEFT JOIN real_employee ON need_amount.id = real_employee.client_marker_shift_id
+ GROUP BY client_market_id
+ ORDER BY client_market_id
